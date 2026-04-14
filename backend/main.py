@@ -1,11 +1,20 @@
 from fastapi import FastAPI
 from .database import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 import backend.models
 from backend.routers import readings, medications, visits, notes, profile, search, summary
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 app.include_router(readings.router)
 app.include_router(medications.router)

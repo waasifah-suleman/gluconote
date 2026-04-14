@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GlucoNote</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="header">
+      <h1 class="logo">GlucoNote</h1>
+      <div class="header-right">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search meds, readings..."
+          />
+          <button class="btn-search" onclick="handleSearch()">Search</button>
+        </div>
+        <div class="avatar" id="avatarInitials">
+          <i class="fa-regular fa-user"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- NAV -->
+      <div class="tab-nav">
+        <div class="tab-links">
+          <button class="tab-btn active" onclick="switchTab('overview', this)">
+            Overview
+          </button>
+          <button class="tab-btn" onclick="switchTab('medications', this)">
+            Medications
+          </button>
+          <button class="tab-btn" onclick="switchTab('visits', this)">
+            Visits
+          </button>
+          <button class="tab-btn" onclick="switchTab('notes', this)">
+            Notes
+          </button>
+        </div>
+        <button class="btn-summary" onclick="openSummary()">
+          <i class="fa-regular fa-file-lines"></i> Generate Summary
+        </button>
+      </div>
+
+      <!-- OVERVIEW TAB -->
+      <div id="tab-overview" class="tab-content active">
+        <!-- CHART CARD-->
+        <div class="card">
+          <div class="card-header">
+            <h2>Blood Sugar Levels</h2>
+            <div class="filter-group">
+              <button class="filter-btn active" onclick="filterChart(7, this)">
+                Last 7 days
+              </button>
+              <button class="filter-btn" onclick="filterChart(30, this)">
+                Last 30 days
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="glucoseChart"></canvas>
+            <div id="chartEmpty" class="empty-state" style="display: none">
+              <p>No data yet - add your first reading</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD READING CARD -->
+        <div class="card">
+          <h2>Add New Reading</h2>
+          <form onsubmit="submitReading(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Blood Sugar (mg/dL)</label>
+                <input
+                  type="number"
+                  id="readingValue"
+                  step="0.1"
+                  placeholder="120"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="readingDate" required />
+              </div>
+
+              <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="readingTime" required />
+              </div>
+
+              <div class="form-group">
+                <label>Context</label>
+                <select id="readingContext">
+                  <option value="fasting">Fasting</option>
+                  <option value="before_meal">Before Meal</option>
+                  <option value="after_meal">After Meal</option>
+                  <option value="bedtime">Bedtime</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary">
+              <i class="fa-solid fa-plus"></i> Add Reading
+            </button>
+          </form>
+        </div>
+
+        <!-- RECENT ENTRIES CARD -->
+        <div class="card">
+          <h2>Recent Entries</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Value (mg/dL)</th>
+                <th>Context</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="readingsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MEDICATIONS TAB -->
+      <div id="tab-medications" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Medications</h2>
+            <button class="btn-primary" onclick="toggleForm('medForm')">
+              <i class="fa-solid fa-plus"></i> Add Medication
+            </button>
+          </div>
+
+          <!-- ADD FORM (HIDDEN) -->
+          <div id="medForm" class="inline-form" style="display: none">
+            <form onsubmit="submitMedication(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Medication Name</label>
+                  <input
+                    type="text"
+                    id="medName"
+                    placeholder="Metformin"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Dosage</label>
+                  <input
+                    type="text"
+                    id="medDosage"
+                    placeholder="500mg twice daily"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Start Date</label>
+                  <input type="date" id="medStartDate" required />
+                </div>
+
+                <div class="form-group">
+                  <label>End Date (Optional)</label>
+                  <input type="date" id="medEndDate" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Prescribing Doctor</label>
+                <input type="text" id="medDoctor" placeholder="Dr. Smith" />
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Add</button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="toggleForm('medForm')"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- MEDICATIONS LIST -->
+          <div id="medicationsList"></div>
+        </div>
+      </div>
+
+      <!-- VISITS TAB -->
+      <div id="tab-visits" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Doctor Visits</h2>
+            <button class="btn-primary" onclick="toggleForm('visitForm')">
+              <i class="fa-solid fa-plus"></i> Add Visit
+            </button>
+          </div>
+
+          <!-- ADD FORM (HIDDEN) -->
+          <div id="visitForm" class="inline-form" style="display: none">
+            <form onsubmit="submitVisit(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Visit Date</label>
+                  <input type="date" id="visitDate" required />
+                </div>
+                <div class="form-group">
+                  <label>Doctor Name</label>
+                  <input
+                    type="text"
+                    id="visitDoctor"
+                    placeholder="Dr. Johnson"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Notes</label>
+                <textarea
+                  id="visitNotes"
+                  placeholder="Discussed A1C results..."
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Add</button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="toggleForm('visitForm')"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- VISIT LIST -->
+          <div id="visitsList"></div>
+        </div>
+      </div>
+
+      <!-- NOTES TAB -->
+      <div id="tab-notes" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Notes & Observations</h2>
+            <button class="btn-primary" onclick="toggleForm('noteForm')">
+              <i class="fa-solid fa-plus"></i> Add Note
+            </button>
+          </div>
+
+          <!-- ADD FORM (HIDDEN) -->
+          <div id="noteForm" class="inline-form" style="display: none">
+            <form onsubmit="submitNote(event)">
+              <div class="form-group">
+                <label>Note</label>
+                <textarea
+                  id="noteContent"
+                  placeholder="Felt dizzy after lunch, might be related to new medication..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Add</button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="toggleForm('noteForm')"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- NOTES LIST -->
+          <div id="notesContainer"></div>
+        </div>
+      </div>
+
+      <!-- SEARCH RESULTS -->
+      <div id="searchResults" class="card" style="display: none">
+        <h2>Search Results</h2>
+        <div id="searchResultsContent"></div>
+      </div>
+    </main>
+
+    <!-- SUMMARY MODAL -->
+    <div id="summaryOverlay" class="modal-overlay" style="display: none">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>
+            <i class="fa-regular fa-file-lines"></i> Health Summary for Doctor
+          </h2>
+          <button class="modal-close" onclick="closeSummary()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body" id="summaryContent"></div>
+        <div class="modal-footer">
+          <button class="btn-primary" onclick="window.print()">
+            Print Summary
+          </button>
+          <button class="btn-cancel" onclick="closeSummary()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
