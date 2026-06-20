@@ -1,5 +1,132 @@
 const API = 'http://127.0.0.1:8000'
 
+//PROFILE MODAL
+let profileExists = false
+let currentProfile = null
+
+async function openProfile() {
+    try {
+        const res = await fetch(`${API}/profile`)
+        if (res.ok) {
+            currentProfile = await res.json()
+            profileExists = true
+            renderProfileView()
+        } else {
+            // no profile yet, go straight to the form
+            currentProfile = null
+            profileExists = false
+            renderProfileForm()
+        }
+    } catch (err) {
+        console.error('Failed to load profile:', err)
+        renderProfileForm()
+    }
+    document.getElementById('profileOverlay').style.display = 'flex'
+}
+
+function closeProfile() {
+    document.getElementById('profileOverlay').style.display = 'none'
+}
+
+function renderProfileView() {
+    const content = document.getElementById('profileContent')
+    content.innerHTML = `
+        <div class="summary-item">
+            <strong>${currentProfile.first_name} ${currentProfile.last_name}</strong>
+            <p>Age: ${currentProfile.age}</p>
+            <p>Gender: ${currentProfile.gender || '—'}</p>
+            <p>Diabetes Type: ${currentProfile.diabetes_type}</p>
+        </div>
+        <div class="form-actions" style="margin-top:16px;">
+            <button class="btn-primary" onclick="renderProfileForm()">Edit Profile</button>
+        </div>
+    `
+}
+
+function renderProfileForm() {
+    const content = document.getElementById('profileContent')
+    const p = currentProfile || {}
+    // p stays empty object if no profile exists yet, so all fields start blank
+
+    content.innerHTML = `
+        <form onsubmit="submitProfile(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="profileFirstName" value="${p.first_name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="profileLastName" value="${p.last_name || ''}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="profileAge" value="${p.age || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Gender (Optional)</label>
+                    <select id="profileGender">
+                        <option value="" ${!p.gender ? 'selected' : ''}>Prefer not to say</option>
+                        <option value="female" ${p.gender === 'female' ? 'selected' : ''}>Female</option>
+                        <option value="male" ${p.gender === 'male' ? 'selected' : ''}>Male</option>
+                        <option value="other" ${p.gender === 'other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Diabetes Type</label>
+                <select id="profileDiabetesType" required>
+                    <option value="Type 1" ${p.diabetes_type === 'Type 1' ? 'selected' : ''}>Type 1</option>
+                    <option value="Type 2" ${p.diabetes_type === 'Type 2' ? 'selected' : ''}>Type 2</option>
+                    <option value="Gestational" ${p.diabetes_type === 'Gestational' ? 'selected' : ''}>Gestational</option>
+                    <option value="Prediabetes" ${p.diabetes_type === 'Prediabetes' ? 'selected' : ''}>Prediabetes</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save</button>
+                ${profileExists ? `<button type="button" class="btn-cancel" onclick="renderProfileView()">Cancel</button>` : ''}
+            </div>
+        </form>
+    `
+}
+
+async function submitProfile(event) {
+    event.preventDefault()
+
+    const body = {
+        first_name: document.getElementById('profileFirstName').value,
+        last_name: document.getElementById('profileLastName').value,
+        age: parseInt(document.getElementById('profileAge').value),
+        gender: document.getElementById('profileGender').value || null,
+        diabetes_type: document.getElementById('profileDiabetesType').value
+    }
+
+    // POST if creating for the first time, PUT if one already exists
+    const method = profileExists ? 'PUT' : 'POST'
+
+    try {
+        const res = await fetch(`${API}/profile`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+        currentProfile = await res.json()
+        profileExists = true
+        renderProfileView()
+        loadProfile()
+        // refreshes the initials shown in the header avatar too
+    } catch (err) {
+        console.error('Failed to save profile:', err)
+    }
+}
+
+// close modal if clicking outside it
+document.getElementById('profileOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeProfile()
+})
+
 // TOGGLE FORMS
 function toggleForm(formId) {
     const form = document.getElementById(formId)
