@@ -25,6 +25,12 @@ def create_note(note: schemas.NoteCreate, db: Session = Depends(get_db)):
 
     return new_note
 
+@router.put("/notes/{note_id}", response_model=schemas.NoteResponse)
+def update_note(note_id: int, note: schemas.NoteCreate, db: Session = Depends(get_db)):
+    existing = db.query(models.Note).filter(
+        models.Note.id == note_id
+    ).first()
+
 @router.delete("/notes/{note_id}")
 def delete_note(note_id: int, db: Session = Depends(get_db)):
     note = db.query(models.Note).filter(

@@ -24,9 +24,8 @@ def create_profile(profile: schemas.ProfileCreate, db: Session = Depends(get_db)
         first_name=profile.first_name,
         last_name=profile.last_name,
         age=profile.age,
-        weight=profile.weight,
-        diagnosis=profile.diagnosis,
-        sex=profile.sex
+        gender=profile.gender,
+        diabetes_type=profile.diabetes_type
     )
 
     db.add(new_profile)
@@ -45,9 +44,8 @@ def update_profile(profile: schemas.ProfileCreate, db: Session = Depends(get_db)
     existing.first_name = profile.first_name
     existing.last_name = profile.last_name
     existing.age = profile.age
-    existing.weight = profile.weight
-    existing.diagnosis = profile.diagnosis
-    existing.sex = profile.sex
+    existing.gender = profile.gender
+    existing.diabetes_type = profile.diabetes_type
 
     db.commit()
     db.refresh(existing)

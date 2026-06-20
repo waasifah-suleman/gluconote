@@ -45,7 +45,7 @@ def get_summary(db: Session = Depends(get_db)):
         "patient": {
             "name": f"{profile.first_name} {profile.last_name}" if profile else "Unknown",
             "age": profile.age if profile else None,
-            "diagnosis": profile.diagnosis if profile else None
+            "diabetes_type": profile.diabetes_type if profile else None
         },
         "glucose_summary": {
             "period": "last 30 days",

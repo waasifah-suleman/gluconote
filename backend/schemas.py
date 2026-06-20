@@ -6,10 +6,9 @@ class ProfileBase(BaseModel):
     first_name: str
     last_name: str
     age: int
-    weight: float
-    diagnosis: str
-    sex: str
-
+    gender: Optional[str] = None
+    diabetes_type: str
+    
 class ProfileCreate(ProfileBase):
     pass
 

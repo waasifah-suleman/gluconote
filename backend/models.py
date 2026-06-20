@@ -10,9 +10,8 @@ class Profile(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
     age = Column(Integer)
-    weight = Column(Float)
-    diagnosis = Column(String)
-    sex = Column(String)
+    gender = Column(String, nullable=True)
+    diabetes_type = Column(String)
     created_at = Column(DateTime, default=func.now())
 
 class GlucoseReading(Base):

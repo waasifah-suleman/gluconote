@@ -38,6 +38,12 @@ def get_one_reading(reading_id: int, db: Session = Depends(get_db)):
     
     return reading
 
+@router.put("/readings/{readings_id}", response_model=schemas.GlucoseReadingResponse)
+def update_reading(reading_id: int, reading: schemas.GlucoseReadingCreate, db: Session = Depends(get_db)):
+    existing = db.query(models.GlucoseReading).filter(
+        models.GlucoseReading.id == reading_id
+    ).first()
+
 @router.delete("/readings/{reading_id}")
 def delete_reading(reading_id: int, db: Session = Depends(get_db)):
     reading = db.query(models.GlucoseReading).filter(
