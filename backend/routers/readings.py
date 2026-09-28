@@ -38,11 +38,24 @@ def get_one_reading(reading_id: int, db: Session = Depends(get_db)):
     
     return reading
 
-@router.put("/readings/{readings_id}", response_model=schemas.GlucoseReadingResponse)
+@router.put("/readings/{reading_id}", response_model=schemas.GlucoseReadingResponse)
 def update_reading(reading_id: int, reading: schemas.GlucoseReadingCreate, db: Session = Depends(get_db)):
     existing = db.query(models.GlucoseReading).filter(
         models.GlucoseReading.id == reading_id
     ).first()
+
+    if not existing:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    
+    existing.value = reading.value
+    existing.reading_time = reading.reading_time
+    existing.context = reading.context
+    existing.notes = reading.notes
+
+    db.commit()
+    db.refresh(existing)
+
+    return existing
 
 @router.delete("/readings/{reading_id}")
 def delete_reading(reading_id: int, db: Session = Depends(get_db)):

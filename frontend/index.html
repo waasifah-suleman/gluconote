@@ -62,25 +62,40 @@
             <h2>Blood Sugar Levels</h2>
             <div class="filter-group">
               <button class="filter-btn active" onclick="filterChart(7, this)">
-                Last 7 days
+                7 days
               </button>
               <button class="filter-btn" onclick="filterChart(30, this)">
-                Last 30 days
+                30 days
+              </button>
+              <button class="filter-btn" onclick="filterChart(90, this)">
+                90 days
+              </button>
+              <button class="filter-btn" onclick="filterChart('all', this)">
+                All time
               </button>
             </div>
+          </div>
+          <div class="chart-nav" id="chartNav">
+            <button class="chart-arrow" id="chartPrev" title="Earlier readings" onclick="shiftChart(1)">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="chart-range" id="chartRangeLabel"></span>
+            <button class="chart-arrow" id="chartNext" title="Later readings" onclick="shiftChart(-1)">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
           </div>
           <div class="chart-container">
             <canvas id="glucoseChart"></canvas>
             <div id="chartEmpty" class="empty-state" style="display: none">
-              <p>No data yet - add your first reading</p>
+              <p id="chartEmptyText">No data yet - add your first reading</p>
             </div>
           </div>
         </div>
 
         <!-- ADD READING CARD -->
         <div class="card">
-          <h2>Add New Reading</h2>
-          <form onsubmit="submitReading(event)">
+          <h2 id="readingFormTitle">Add New Reading</h2>
+          <form id="readingForm" onsubmit="submitReading(event)">
             <div class="form-row">
               <div class="form-group">
                 <label>Blood Sugar (mg/dL)</label>
@@ -113,15 +128,27 @@
                 </select>
               </div>
             </div>
-            <button type="submit" class="btn-primary">
-              <i class="fa-solid fa-plus"></i> Add Reading
-            </button>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="readingSubmitBtn">
+                <i class="fa-solid fa-plus"></i> Add Reading
+              </button>
+              <button
+                type="button"
+                class="btn-cancel"
+                id="readingCancelBtn"
+                onclick="cancelReadingEdit()"
+                style="display: none"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
 
         <!-- RECENT ENTRIES CARD -->
         <div class="card">
-          <h2>Recent Entries</h2>
+          <h2>History</h2>
+          <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
@@ -133,6 +160,7 @@
             </thead>
             <tbody id="readingsTableBody"></tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -141,14 +169,14 @@
         <div class="card">
           <div class="card-header">
             <h2>Medications</h2>
-            <button class="btn-primary" onclick="toggleForm('medForm')">
+            <button class="btn-primary" onclick="openForm('med')">
               <i class="fa-solid fa-plus"></i> Add Medication
             </button>
           </div>
 
           <!-- ADD FORM (HIDDEN) -->
           <div id="medForm" class="inline-form" style="display: none">
-            <form onsubmit="submitMedication(event)">
+            <form id="medFormEl" onsubmit="submitMedication(event)">
               <div class="form-row">
                 <div class="form-group">
                   <label>Medication Name</label>
@@ -188,11 +216,11 @@
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn-primary">Add</button>
+                <button type="submit" class="btn-primary" id="medSubmitBtn">Add</button>
                 <button
                   type="button"
                   class="btn-cancel"
-                  onclick="toggleForm('medForm')"
+                  onclick="closeForm('med')"
                 >
                   Cancel
                 </button>
@@ -210,14 +238,14 @@
         <div class="card">
           <div class="card-header">
             <h2>Doctor Visits</h2>
-            <button class="btn-primary" onclick="toggleForm('visitForm')">
+            <button class="btn-primary" onclick="openForm('visit')">
               <i class="fa-solid fa-plus"></i> Add Visit
             </button>
           </div>
 
           <!-- ADD FORM (HIDDEN) -->
           <div id="visitForm" class="inline-form" style="display: none">
-            <form onsubmit="submitVisit(event)">
+            <form id="visitFormEl" onsubmit="submitVisit(event)">
               <div class="form-row">
                 <div class="form-group">
                   <label>Visit Date</label>
@@ -243,11 +271,11 @@
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn-primary">Add</button>
+                <button type="submit" class="btn-primary" id="visitSubmitBtn">Add</button>
                 <button
                   type="button"
                   class="btn-cancel"
-                  onclick="toggleForm('visitForm')"
+                  onclick="closeForm('visit')"
                 >
                   Cancel
                 </button>
@@ -265,14 +293,14 @@
         <div class="card">
           <div class="card-header">
             <h2>Notes & Observations</h2>
-            <button class="btn-primary" onclick="toggleForm('noteForm')">
+            <button class="btn-primary" onclick="openForm('note')">
               <i class="fa-solid fa-plus"></i> Add Note
             </button>
           </div>
 
           <!-- ADD FORM (HIDDEN) -->
           <div id="noteForm" class="inline-form" style="display: none">
-            <form onsubmit="submitNote(event)">
+            <form id="noteFormEl" onsubmit="submitNote(event)">
               <div class="form-group">
                 <label>Note</label>
                 <textarea
@@ -283,11 +311,11 @@
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn-primary">Add</button>
+                <button type="submit" class="btn-primary" id="noteSubmitBtn">Add</button>
                 <button
                   type="button"
                   class="btn-cancel"
-                  onclick="toggleForm('noteForm')"
+                  onclick="closeForm('note')"
                 >
                   Cancel
                 </button>
@@ -302,7 +330,12 @@
 
       <!-- SEARCH RESULTS -->
       <div id="searchResults" class="card" style="display: none">
-        <h2>Search Results</h2>
+        <div class="card-header">
+          <h2 id="searchResultsTitle">Search Results</h2>
+          <button class="modal-close" title="Close search" onclick="closeSearch()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
         <div id="searchResultsContent"></div>
       </div>
     </main>

@@ -31,6 +31,17 @@ def update_note(note_id: int, note: schemas.NoteCreate, db: Session = Depends(ge
         models.Note.id == note_id
     ).first()
 
+    if not existing:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    existing.content = note.content
+    existing.tags = note.tags
+
+    db.commit()
+    db.refresh(existing)
+
+    return existing
+
 @router.delete("/notes/{note_id}")
 def delete_note(note_id: int, db: Session = Depends(get_db)):
     note = db.query(models.Note).filter(
@@ -43,4 +54,4 @@ def delete_note(note_id: int, db: Session = Depends(get_db)):
     db.delete(note)
     db.commit()
 
-    return {"message": "Note deleted successfully"}
+    return {"message": "Note deleted successfully"}
