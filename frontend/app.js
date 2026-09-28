@@ -245,13 +245,26 @@ function initChart(readings) {
         document.getElementById('chartEmptyText').textContent = allReadings.length > 0
             ? 'No readings in this period - use the arrows to look further back'
             : 'No data yet - add your first reading'
-        document.getElementById('glucoseChart').style.display = 'none'
+        document.getElementById('chartInner').style.display = 'none'
+        document.getElementById('chartHint').style.display = 'none'
+        document.getElementById('chartYAxis').style.display = 'none'
         document.getElementById('chartEmpty').style.display = 'flex'
         return
     }
 
-    document.getElementById('glucoseChart').style.display = 'block'
+    document.getElementById('chartInner').style.display = 'block'
     document.getElementById('chartEmpty').style.display = 'none'
+
+    // On small screens, lots of points get squashed together. Instead, the chart is made
+    // wider than the screen (a set width per point) and the card scrolls sideways.
+    const scroller = document.getElementById('chartScroll')
+    const inner = document.getElementById('chartInner')
+    const PX_PER_POINT = 14
+    const neededWidth = readings.length * PX_PER_POINT
+    const scrollable = window.innerWidth <= 768 && neededWidth > scroller.clientWidth
+
+    inner.style.width = scrollable ? `${neededWidth}px` : '100%'
+    document.getElementById('chartHint').style.display = scrollable ? 'block' : 'none'
 
     const sorted = [...readings].sort((a, b) => new Date(a.reading_time) - new Date(b.reading_time))
 
@@ -267,8 +280,11 @@ function initChart(readings) {
 
     const values = sorted.map(r => r.value)
 
+    document.getElementById('chartYAxis').style.display = scrollable ? 'block' : 'none'
+
     glucoseChart = new Chart(ctx, {
         type: 'line',
+        plugins: scrollable ? [stickyYAxis] : [],
         data: {
             labels: labels,
             datasets: [{
@@ -306,7 +322,7 @@ function initChart(readings) {
             scales: {
                 x: {
                     grid: { color: '#f0f0f0' },
-                    ticks: { color: '#aaa', font: { size: 12 }, maxTicksLimit: 10, maxRotation: 0 }
+                    ticks: { color: '#aaa', font: { size: 12 }, maxTicksLimit: scrollable ? Math.round(neededWidth / 80) : 10, maxRotation: 0 }
                 },
                 y: {
                     beginAtZero: true,
@@ -316,6 +332,32 @@ function initChart(readings) {
             }
         }
     })
+
+    // open on the newest readings, so swiping right to left goes back in time
+    scroller.scrollLeft = scrollable ? scroller.scrollWidth : 0
+}
+
+// When the chart scrolls sideways, the y-axis numbers would scroll away with it.
+// This copies the y-axis area of the chart onto a small canvas pinned to the left edge.
+const stickyYAxis = {
+    id: 'stickyYAxis',
+    afterRender(chart) {
+        const overlay = document.getElementById('chartYAxis')
+        const ratio = chart.currentDevicePixelRatio
+        // only the y-axis numbers: stop just before the plotted line and above the date labels
+        const width = Math.floor(chart.scales.y.right) - 2
+        const height = Math.ceil(chart.chartArea.bottom) + 1
+
+        overlay.width = width * ratio
+        overlay.height = height * ratio
+        overlay.style.width = `${width}px`
+        overlay.style.height = `${height}px`
+
+        const ctx = overlay.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, overlay.width, overlay.height)
+        ctx.drawImage(chart.canvas, 0, 0, width * ratio, height * ratio, 0, 0, width * ratio, height * ratio)
+    }
 }
 
 // Start and end dates of the window currently being shown
@@ -932,6 +974,13 @@ async function loadProfile() {
         // no profile yet, icon stays
     }
 }
+
+// redraw the chart when the screen size changes (e.g. turning a phone sideways)
+let resizeTimer = null
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(renderChart, 250)
+})
 
 // INIT
 document.addEventListener('DOMContentLoaded', () => {

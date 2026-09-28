@@ -84,12 +84,20 @@
               <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
-          <div class="chart-container">
-            <canvas id="glucoseChart"></canvas>
+          <div class="chart-wrap">
+          <canvas id="chartYAxis" class="chart-y-axis" style="display: none"></canvas>
+          <div class="chart-container" id="chartScroll">
+            <div class="chart-inner" id="chartInner">
+              <canvas id="glucoseChart"></canvas>
+            </div>
             <div id="chartEmpty" class="empty-state" style="display: none">
               <p id="chartEmptyText">No data yet - add your first reading</p>
             </div>
           </div>
+          </div>
+          <p class="chart-hint" id="chartHint" style="display: none">
+            <i class="fa-solid fa-arrow-left"></i> Swipe the chart to see older readings
+          </p>
         </div>
 
         <!-- ADD READING CARD -->

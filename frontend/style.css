@@ -232,6 +232,44 @@ body {
     background: #f8f9fa;
 }
 
+/* SCROLLABLE CHART (used on phones when there are lots of readings) */
+.chart-wrap {
+    position: relative;
+}
+
+.chart-y-axis {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+    box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.12);
+}
+
+.chart-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.chart-inner {
+    position: relative;
+    height: 100%;
+    min-width: 100%;
+}
+
+.chart-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+}
+
+.chart-hint i {
+    font-size: 11px;
+    margin-right: 4px;
+}
+
 /* CHART NAVIGATION (arrows + date range) */
 .chart-nav {
     display: flex;
